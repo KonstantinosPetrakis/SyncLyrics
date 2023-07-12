@@ -1,0 +1,9 @@
+.logo {
+    display: block;
+    width: 25px;
+    height: 25px;
+}
+
+input[type="range"] {
+    width: 75%;
+}

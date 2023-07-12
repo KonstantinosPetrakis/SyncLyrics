@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block scripts %}
+    <script src="{{ url_for('static', filename='js/lyrics.js')}}"> </script>
+{% endblock %}
+
+{% block content %}
+    <div id="lyrics" class="text-center mt-5">
+        <div id="previous-lyric" class="fs-3 text-secondary"> </div>
+        <div id="current-lyric" class="fs-2"> </div>
+        <div id="next-lyric" class="fs-3 text-secondary"> </div>
+    </div>
+{% endblock %}

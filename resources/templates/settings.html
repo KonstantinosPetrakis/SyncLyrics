@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% set input_wrapper_class = 'd-flex align-items-center my-2' %}
+{% set label_class = 'form-label me-auto d-block w-25' %}
+
+{% macro range_percent_input(label, variable) %}
+    {% set variable_value = self._TemplateReference__context.resolve(variable) %}
+
+    <div class="{{ input_wrapper_class }}">
+        <label for="{{ variable }}" class="{{ label_class }}"> {{ label }} </label>
+        <input type="range" class="form-range" id="{{ variable }}" name="{{ variable }}" 
+            min=0 max=100 value="{{ variable_value }}">
+    </div>
+{% endmacro %}
+
+{% macro checkbox_input(label, variable) %}
+    {% set variable_value = self._TemplateReference__context.resolve(variable) %}
+
+    <div class="{{ input_wrapper_class }} me-3">
+        <label for="{{ variable }}" class="d-block"> {{ label }} </label>
+        <input class="form-check-input ms-1 d-block" type="checkbox" name="{{variable}}"
+            id="{{ variable }}" {% if variable_value %} checked {% endif %}>
+    </div>
+{% endmacro %}
+
+{% macro options_input(label, variable, options) %}
+    {% set variable_value = self._TemplateReference__context.resolve(variable) %}
+
+    <div class="{{ input_wrapper_class }}">
+        <label for="{{ variable }}" class="d-block"> {{ label }} </label>
+        <select class="form-select" id="{{ variable }}" name="{{ variable }}">
+            {% for option in options %}
+                <option value="{{ option }}" {% if option == variable_value %} selected {% endif %}>
+                    {{ option }}
+                </option>
+            {% endfor %}
+        </select>
+    </div>
+{% endmacro %}
+
+{% macro radio_group(label_values, variable) %}
+    {% set variable_value = self._TemplateReference__context.resolve(variable) %}
+
+    <div class="{{ input_wrapper_class }}">
+        <div class="d-flex"> 
+            {% for label_value in label_values %}
+                {% set label = label_value[0] %}
+                {% set value = label_value[1] %}
+                <div class="form-check me-2" >
+                    <input class="form-check-input" type="radio" name="{{ variable }}"
+                        id="{{ value }}" value="{{ value }}"
+                        {% if value == variable_value %} checked {% endif %}>
+                    <label class="form-check-label" for="{{ value }}"> {{ label }} </label>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+{% endmacro %}
+
+{% macro color_picker(label, variable) %}
+    {% set variable_value = self._TemplateReference__context.resolve(variable) %}
+
+    <div class="{{ input_wrapper_class }}">
+        <label for="{{ variable }}" class="{{ label_class }}"> {{ label }} </label>
+        <input type="color" class="form-control form-control-color ms-2" id="{{ variable }}"
+            name={{ variable }} value="{{ variable_value }}">
+    </div>
+{% endmacro %}
+
+{% block content %}
+    <form action="{{ url_for('settings') }}" method="post" 
+        class="col-xl-6 col-lg-8 col-md-10 col-12 border rounded mx-auto mt-4 p-3">
+        <h4> Application settings </h4>
+        {{ radio_group([('Dark', 'dark'), ('Light', 'light')], 'theme') }}
+        <h4> Representation Methods </h4>
+        <div class="d-flex">
+            {{ checkbox_input('Notifications', 'notification-method') }}
+            {{ checkbox_input('Wallpaper', 'wallpaper-method') }}
+            {{ checkbox_input('Terminal', 'terminal-method') }}
+        </div>
+        <h4 class="mt-2"> Wallpaper Settings </h4>
+        <div id="wallpaper-settings">
+            {{ range_percent_input('Font size in % (of wallpaper width)', 'font-size') }}
+            {{ color_picker('Font Color (ignored if pick from wallpaper is on)', 'font-color') }}
+            {{ checkbox_input('Pick font color from wallpaper', 'wallpaper-font-color') }}
+            {{ options_input('Font Family', 'font-family', available_fonts) }}
+            {{ range_percent_input('Font stroke in % (of font size)', 'font-stroke') }}
+            {{ range_percent_input('X offset in %', 'x-offset') }}
+            {{ range_percent_input('Y offset in %', 'y-offset') }}
+            {{ range_percent_input('Width in %', 'width') }}
+            {{ range_percent_input('Height in %', 'height') }}
+            {{ range_percent_input('Quality in %', 'quality') }}
+            {{ range_percent_input('Scaling in %', 'scaling') }}
+        </div>
+        <input class="btn btn-primary" type="submit" value="Save">
+        <a href="/reset-defaults" class="btn btn-primary"> Reset defaults </a>
+    </form>
+{% endblock %}
