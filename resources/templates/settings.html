@@ -3,27 +3,33 @@
 {% set input_wrapper_class = 'd-flex align-items-center my-2' %}
 {% set label_class = 'form-label me-auto d-block w-25' %}
 
-{% macro range_percent_input(label, variable) %}
+{% macro range_percent_input(label, variable, help="") %}
     {% set variable_value = self._TemplateReference__context.resolve(variable) %}
 
     <div class="{{ input_wrapper_class }}">
         <label for="{{ variable }}" class="{{ label_class }}"> {{ label }} </label>
         <input type="range" class="form-range" id="{{ variable }}" name="{{ variable }}" 
             min=0 max=100 value="{{ variable_value }}">
+        {% if help %} 
+            <div class="help ms-2" data-bs-toggle="tooltip" data-bs-title="{{ help }}"> ⓘ </div> 
+        {% endif %}
     </div>
 {% endmacro %}
 
-{% macro checkbox_input(label, variable) %}
+{% macro checkbox_input(label, variable, help="") %}
     {% set variable_value = self._TemplateReference__context.resolve(variable) %}
 
     <div class="{{ input_wrapper_class }} me-3">
         <label for="{{ variable }}" class="d-block"> {{ label }} </label>
         <input class="form-check-input ms-1 d-block" type="checkbox" name="{{variable}}"
             id="{{ variable }}" {% if variable_value %} checked {% endif %}>
+        {% if help %} 
+            <div class="help ms-2" data-bs-toggle="tooltip" data-bs-title="{{ help }}"> ⓘ </div> 
+        {% endif %}
     </div>
 {% endmacro %}
 
-{% macro options_input(label, variable, options) %}
+{% macro options_input(label, variable, options, help="") %}
     {% set variable_value = self._TemplateReference__context.resolve(variable) %}
 
     <div class="{{ input_wrapper_class }}">
@@ -35,10 +41,13 @@
                 </option>
             {% endfor %}
         </select>
+        {% if help %} 
+            <div class="help ms-2" data-bs-toggle="tooltip" data-bs-title="{{ help }}"> ⓘ </div> 
+        {% endif %}
     </div>
 {% endmacro %}
 
-{% macro radio_group(label_values, variable) %}
+{% macro radio_group(label_values, variable, help="") %}
     {% set variable_value = self._TemplateReference__context.resolve(variable) %}
 
     <div class="{{ input_wrapper_class }}">
@@ -54,43 +63,53 @@
                 </div>
             {% endfor %}
         </div>
+        {% if help %} 
+            <div class="help ms-2" data-bs-toggle="tooltip" data-bs-title="{{ help }}"> ⓘ </div> 
+        {% endif %}
     </div>
 {% endmacro %}
 
-{% macro color_picker(label, variable) %}
+{% macro color_picker(label, variable, help="") %}
     {% set variable_value = self._TemplateReference__context.resolve(variable) %}
 
     <div class="{{ input_wrapper_class }}">
         <label for="{{ variable }}" class="{{ label_class }}"> {{ label }} </label>
         <input type="color" class="form-control form-control-color ms-2" id="{{ variable }}"
             name={{ variable }} value="{{ variable_value }}">
+        {% if help %} 
+            <div class="help ms-2" data-bs-toggle="tooltip" data-bs-title="{{ help }}"> ⓘ </div> 
+        {% endif %}
     </div>
 {% endmacro %}
+
+{% block scripts %}
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"></script>
+{% endblock %}
 
 {% block content %}
     <form action="{{ url_for('settings') }}" method="post" 
         class="col-xl-6 col-lg-8 col-md-10 col-12 border rounded mx-auto mt-4 p-3">
         <h4> Application settings </h4>
-        {{ radio_group([('Dark', 'dark'), ('Light', 'light')], 'theme') }}
+        {{ radio_group([('Dark', 'dark'), ('Light', 'light')], 'theme', "The theme in this application.") }}
         <h4> Representation Methods </h4>
         <div class="d-flex">
-            {{ checkbox_input('Notifications', 'notification-method') }}
-            {{ checkbox_input('Wallpaper', 'wallpaper-method') }}
-            {{ checkbox_input('Terminal', 'terminal-method') }}
+            {{ checkbox_input('Notifications', 'notification-method', "Whether notifications should be sent for lyrics.") }}
+            {{ checkbox_input('Wallpaper', 'wallpaper-method', "Whether lyrics should show on the wallpaper.") }}
+            {{ checkbox_input('Terminal', 'terminal-method', "Whether lyrics should be printed in the terminal.") }}
         </div>
         <h4 class="mt-2"> Wallpaper Settings </h4>
         <div id="wallpaper-settings">
-            {{ range_percent_input('Font size in % (of wallpaper width)', 'font-size') }}
-            {{ color_picker('Font Color (ignored if pick from wallpaper is on)', 'font-color') }}
-            {{ checkbox_input('Pick font color from wallpaper', 'wallpaper-font-color') }}
-            {{ options_input('Font Family', 'font-family', available_fonts) }}
-            {{ range_percent_input('Font stroke in % (of font size)', 'font-stroke') }}
-            {{ range_percent_input('X offset in %', 'x-offset') }}
-            {{ range_percent_input('Y offset in %', 'y-offset') }}
-            {{ range_percent_input('Width in %', 'width') }}
-            {{ range_percent_input('Height in %', 'height') }}
-            {{ range_percent_input('Quality in %', 'quality') }}
-            {{ range_percent_input('Scaling in %', 'scaling') }}
+            {{ range_percent_input('Font size in % (of wallpaper width)', 'font-size', "The font size as percentage of the wallpaper width. That's a good measure that works for every wallpaper. For example 3% of 1920x1080 = 57px") }}
+            {{ color_picker('Font Color (ignored if pick from wallpaper is on)', 'font-color', "The color of the font, if picked from wallpaper that setting is ignored.") }}
+            {{ checkbox_input('Pick font color from wallpaper', 'wallpaper-font-color', "Whether the font color should be the the most dominant in the wallpaper.") }}
+            {{ options_input('Font Family', 'font-family', available_fonts, "The font family to be used for displaying the lyrics.") }}
+            {{ range_percent_input('Font stroke in % (of font size)', 'font-stroke', "The font stroke as percent of the font size. That's a good measure that works for every font size. For example 5% of 50px = 2px.") }}
+            {{ range_percent_input('X offset in %', 'x-offset', "The horizontal offset in the lyrics box.") }}
+            {{ range_percent_input('Y offset in %', 'y-offset', "The vertical offset in the lyrics box.") }}
+            {{ range_percent_input('Width in %', 'width', "The width of the lyrics box.") }}
+            {{ range_percent_input('Height in %', 'height', "The height of the lyrics box.") }}
+            {{ range_percent_input('Quality in %', 'quality', "The quality of the lyrics wallpaper. How much JPEG compression is applied.") }}
+            {{ range_percent_input('Scaling in %', 'scaling', "The scaling (change of resolution) as percentage of the initial wallpaper.") }}
         </div>
         <input class="btn btn-primary" type="submit" value="Save">
         <a href="/reset-defaults" class="btn btn-primary"> Reset defaults </a>
