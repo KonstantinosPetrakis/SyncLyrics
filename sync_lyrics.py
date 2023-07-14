@@ -5,6 +5,7 @@ import logging
 import click
 from os import path, _exit
 from time import time
+from typing import NoReturn
 
 
 from desktop_notifier import DesktopNotifier
@@ -17,12 +18,26 @@ from state_manager import get_state
 from server import app
 
 
-def quit_gracefully():
+def quit_gracefully() -> NoReturn:
+    """
+    Quit the program gracefully by restoring the wallpaper and exiting with code 0
+
+    Returns:
+        NoReturn: The program exits with code 0
+    """
+
     restore_wallpaper()
     _exit(0)
 
 
-def run_tray():
+def run_tray() -> NoReturn:
+    """
+    Run the tray icon
+
+    Returns:
+        NoReturn: This function never returns.
+    """
+
     Icon("SyncLyrics", Image.open(ICON_URL), menu=Menu(
         MenuItem("Open Lyrics", lambda: webbrowser.open(f"http://localhost:{PORT}"), default=True),
         MenuItem("Open Settings", lambda: webbrowser.open(f"http://localhost:{PORT}/settings")),
@@ -30,7 +45,14 @@ def run_tray():
     )).run()
 
 
-def run_server():
+def run_server() -> NoReturn:
+    """
+    Run the flask server
+
+    Returns:
+        NoReturn: This function never returns.
+    """
+
     # Mute output from flask
     log = logging.getLogger('werkzeug')
     log.setLevel(logging.ERROR)
@@ -41,7 +63,15 @@ def run_server():
     app.run(port=PORT, debug=False, use_reloader=False)
 
 
-async def main():
+async def main() -> NoReturn:
+    """
+    The main function of the program. It runs the server and the tray icon, and
+    it also handles the lyrics rendering.
+
+    Returns:
+        NoReturn: This function never returns.
+    """
+
     # We count the average latency for wallpaper method because it's heavy
     # And we want to take the render time into account 
     delta_sum = 0

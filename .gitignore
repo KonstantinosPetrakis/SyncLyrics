@@ -2,3 +2,7 @@
 /__pycache__
 current_wallpaper.png
 state.json
+/__main__.build
+/__main__.dist
+/__main__.onefile-build
+__main__.bin
