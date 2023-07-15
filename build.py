@@ -5,7 +5,7 @@ from sys import argv
 
 
 if __name__ == "__main__":
-    main_name = "sync_lyrics.py"
+    main_name = "sync_lyrics"
 
     if "clean" in argv:
         if path.exists(f"{main_name}.bin"): rm(f"{main_name}.bin")
@@ -19,5 +19,5 @@ if __name__ == "__main__":
             extra_args = "--include-package=vext" # This is required for the tray icon to work on Linux
 
         s(f"python -m nuitka --onefile --standalone --follow-imports " \
-            f"--include-package=desktop_notifier {extra_args} {main_name}")
+            f"--include-package=desktop_notifier {extra_args} {main_name}.py")
     

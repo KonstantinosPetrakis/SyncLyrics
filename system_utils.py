@@ -241,12 +241,12 @@ if DESKTOP == "Linux":
     process = subprocess.Popen("gsettings get org.gnome.desktop.interface color-scheme",
         shell=True, stdout=subprocess.PIPE)
     process.wait()
-    if process.returncode: raise NotImplementedError("Only gnome is supported on Linux")
-    DESKTOP = "Gnome"
-    if process.stdout.read().decode("utf-8").replace("\n", "") == "'prefer-dark'":
-        GNOME_THEME = "dark"
-    else:
-        GNOME_THEME = "light"
+    if process.returncode == 0:
+        DESKTOP = "Gnome"
+        if process.stdout.read().decode("utf-8").replace("\n", "") == "'prefer-dark'":
+            GNOME_THEME = "dark"
+        else:
+            GNOME_THEME = "light"
 elif DESKTOP == "Darwin":
     raise NotImplementedError("MacOS not supported")
 
