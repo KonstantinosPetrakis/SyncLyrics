@@ -1,9 +1,11 @@
-# Lyric Sync
+# SyncLyrics
 
 ## Description
 A cross-platform application that let's you sing along to your favorite songs regardless the player by displaying the lyrics of the currently playing song on your desktop wallpaper, notification pane, terminal or in a locally hosted webpage.
 
-# Run from source
+For more information check the SyncLyrics' [website](https://konstantinospetrakis.github.io/SyncLyrics/)!
+
+## Run from source
 ```python
 python -m venv venv
 source ./venv/bin/activate
@@ -11,7 +13,7 @@ pip install -r requirements.txt
 python sync_lyrics.py
 ```
 
-# Build
+## Build
 ```python
 python build.py 
 ```
