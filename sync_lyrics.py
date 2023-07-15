@@ -3,7 +3,10 @@ import webbrowser
 import threading as th
 import logging
 import click
-from os import path, _exit
+import atexit
+import signal
+from sys import exit
+from os import path
 from time import time
 from typing import NoReturn
 
@@ -18,16 +21,14 @@ from state_manager import get_state
 from server import app
 
 
-def quit_gracefully() -> NoReturn:
+def handle_exit(*args, **kwargs) -> NoReturn:
     """
-    Quit the program gracefully by restoring the wallpaper and exiting with code 0
-
-    Returns:
-        NoReturn: The program exits with code 0
+    Exit needs to be handled manually because that's required for handling 
+    killing signals, otherwise the program will not exit properly.
+    See https://stackoverflow.com/a/76254371/11718554
     """
 
-    restore_wallpaper()
-    _exit(0)
+    exit(0)
 
 
 def run_tray() -> NoReturn:
@@ -41,7 +42,7 @@ def run_tray() -> NoReturn:
     Icon("SyncLyrics", Image.open(ICON_URL), menu=Menu(
         MenuItem("Open Lyrics", lambda: webbrowser.open(f"http://localhost:{PORT}"), default=True),
         MenuItem("Open Settings", lambda: webbrowser.open(f"http://localhost:{PORT}/settings")),
-        MenuItem("Quit", quit_gracefully)
+        MenuItem("Quit", handle_exit)
     )).run()
 
 
@@ -61,6 +62,7 @@ def run_server() -> NoReturn:
     click.echo = echo
     click.secho = secho
     app.run(port=PORT, debug=False, use_reloader=False)
+    print("Server ended")
 
 
 async def main() -> NoReturn:
@@ -112,5 +114,10 @@ PORT = 9012
 t_tray = th.Thread(target=run_tray, daemon=True).start()
 t_server = th.Thread(target=run_server, daemon=True).start()
 notifier = DesktopNotifier("SyncLyrics", ICON_URL)
-try: asyncio.run(main())
-except KeyboardInterrupt: quit_gracefully()
+
+# Restore wallpaper on exit (exit gracefully)
+atexit.register(restore_wallpaper)
+signal.signal(signal.SIGINT, handle_exit)
+signal.signal(signal.SIGTERM, handle_exit)
+
+asyncio.run(main())

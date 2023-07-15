@@ -1,4 +1,5 @@
-from os import path
+from os import path, getpid, kill
+from signal import SIGINT
 from typing import Any
 
 from flask import Flask, render_template, redirect, flash, request, Response
@@ -130,3 +131,16 @@ def reset_defaults() -> Response:
     reset_state()
     flash("Settings have been reset!", "success")
     return redirect("/settings")
+
+
+@app.route("/exit-application")
+def exit_application() -> dict[str, str]:
+    """
+    This function exits the application.
+
+    Returns:
+        dict[str, str]: A dictionary with a success message.
+    """
+
+    kill(getpid(), SIGINT)
+    return {"msg": "Application has been closed."}

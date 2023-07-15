@@ -13,7 +13,7 @@
     {% block scripts %} {% endblock %}
 </head>
 <body class="d-flex flex-column vh-100">
-    <div id="header">
+    <div id="header" class="d-flex">
         <ul class="nav nav-tabs">
             <li class="nav-item">
                 <a 
@@ -31,6 +31,9 @@
             </a>
             </li>
         </ul>
+        <a data-do-not-follow-link href="/exit-application" class="ms-auto btn btn-secondary">
+            Exit Application
+        </a>
     </div>
     <div id="content">
         <h1 class="text-center"> 🎵 SyncLyrics 🎵 </h1>
