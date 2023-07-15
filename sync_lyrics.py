@@ -3,13 +3,10 @@ import webbrowser
 import threading as th
 import logging
 import click
-import atexit
-import signal
-from sys import exit
 from os import path
 from time import time
 from typing import NoReturn
-
+from queue import Queue
 
 from desktop_notifier import DesktopNotifier
 from pystray import Icon, Menu, MenuItem
@@ -19,16 +16,6 @@ from lyrics import get_timed_lyrics
 from graphics import render_text_with_background, restore_wallpaper
 from state_manager import get_state
 from server import app
-
-
-def handle_exit(*args, **kwargs) -> NoReturn:
-    """
-    Exit needs to be handled manually because that's required for handling 
-    killing signals, otherwise the program will not exit properly.
-    See https://stackoverflow.com/a/76254371/11718554
-    """
-
-    exit(0)
 
 
 def run_tray() -> NoReturn:
@@ -42,7 +29,7 @@ def run_tray() -> NoReturn:
     Icon("SyncLyrics", Image.open(ICON_URL), menu=Menu(
         MenuItem("Open Lyrics", lambda: webbrowser.open(f"http://localhost:{PORT}"), default=True),
         MenuItem("Open Settings", lambda: webbrowser.open(f"http://localhost:{PORT}/settings")),
-        MenuItem("Quit", handle_exit)
+        MenuItem("Quit", lambda: queue.put("exit"))
     )).run()
 
 
@@ -61,8 +48,20 @@ def run_server() -> NoReturn:
     def echo(*args, **kwargs): pass
     click.echo = echo
     click.secho = secho
+
+    @app.route("/exit-application")
+    def exit_application() -> dict[str, str]:
+        """
+        This function exits the application.
+
+        Returns:
+            dict[str, str]: A dictionary with a success message.
+        """
+
+        queue.put("exit")
+        return {"msg": "Application has been closed."}
+
     app.run(port=PORT, debug=False, use_reloader=False)
-    print("Server ended")
 
 
 async def main() -> NoReturn:
@@ -84,7 +83,7 @@ async def main() -> NoReturn:
     while True:
         if "wallpaper" in methods:
             avg_latency = (delta_sum / delta_count) if delta_count > 0 else 0.1
-            lyric = get_timed_lyrics(avg_latency)
+            lyric = await get_timed_lyrics(avg_latency)
             if lyric is not None and lyric != last_printed_lyric_per_method["wallpaper"]:
                 t0 = time()
                 render_text_with_background(lyric)
@@ -94,30 +93,31 @@ async def main() -> NoReturn:
                 last_printed_lyric_per_method["wallpaper"] = lyric
 
         if "terminal" in methods:
-            lyric = get_timed_lyrics()
+            lyric = await get_timed_lyrics()
             if lyric is not None and lyric != last_printed_lyric_per_method["terminal"]:
                 print(lyric)
                 last_printed_lyric_per_method["terminal"] = lyric
         
         if "notifications" in methods:
-            lyric = get_timed_lyrics()
+            lyric = await get_timed_lyrics()
             if lyric is not None and lyric != last_printed_lyric_per_method["notifications"]:
                 await notifier.clear_all()
                 await notifier.send(title="SyncLyrics", message=lyric)
                 last_printed_lyric_per_method["notifications"] = lyric
 
+        # Exit gracefully
+        if queue.qsize() > 0 and queue.get() == "exit": break
+        await asyncio.sleep(0.1) # Let the CPU rest a bit
 
 
 ICON_URL = path.abspath("./resources/images/icon.ico")
 PORT = 9012
 
+queue = Queue()
 t_tray = th.Thread(target=run_tray, daemon=True).start()
 t_server = th.Thread(target=run_server, daemon=True).start()
 notifier = DesktopNotifier("SyncLyrics", ICON_URL)
 
-# Restore wallpaper on exit (exit gracefully)
-atexit.register(restore_wallpaper)
-signal.signal(signal.SIGINT, handle_exit)
-signal.signal(signal.SIGTERM, handle_exit)
-
-asyncio.run(main())
+try: asyncio.run(main())
+except KeyboardInterrupt: queue.put("exit")
+restore_wallpaper() # Restore the wallpaper when the program exits

@@ -7,17 +7,25 @@ current_song_data = None
 current_song_lyrics = None
 
 
-def _update_song():
+async def _update_song():
     """
     This function updates the current song data and lyrics (the global variables).
     """
 
     global current_song_lyrics, current_song_data
-    song_data = get_current_song_meta_data()
-    
-    if song_data != current_song_data and song_data is not None:
-        current_song_data = song_data
-        current_song_lyrics = _get_lyrics(song_data["artist"], song_data["title"])
+
+    new_song_data = await get_current_song_meta_data()
+
+    should_fetch_lyrics = new_song_data is not None and (
+        current_song_data is None or (
+            current_song_data["artist"] != new_song_data["artist"] or
+            current_song_data["title"] != new_song_data["title"]
+        ))
+
+    if should_fetch_lyrics:
+        current_song_lyrics = _get_lyrics(new_song_data["artist"], new_song_data["title"])
+            
+    current_song_data = new_song_data
 
 
 def _get_lyrics(artist: str, title: str) -> list[tuple[float, str]]:
@@ -59,7 +67,7 @@ def _find_current_lyric_index(delta: float = 0.1) -> int:
         int: The index of the current lyric in the current_song_lyrics list. If a lyric is not found, -1 is returned.
     """
 
-    if current_song_lyrics is not None:
+    if current_song_lyrics is not None and current_song_data is not None:
         time = current_song_data["position"]
         for i in range(len(current_song_lyrics) - 1):
             if current_song_lyrics[i][0] <= time + delta < current_song_lyrics[i + 1][0]:
@@ -67,7 +75,7 @@ def _find_current_lyric_index(delta: float = 0.1) -> int:
     return -1
 
 
-def get_timed_lyrics(delta: int = 0) -> str:
+async def get_timed_lyrics(delta: int = 0) -> str:
     """
     This function returns the current lyric of the song.
 
@@ -78,13 +86,13 @@ def get_timed_lyrics(delta: int = 0) -> str:
         str: The current lyric of the song. If a lyric is not found, "Lyrics not found" is returned.
     """
 
-    _update_song()
+    await _update_song()
     lyric_index = _find_current_lyric_index(delta)
     if lyric_index == -1: return "Lyrics not found"
     return current_song_lyrics[lyric_index][1]
 
 
-def get_timed_lyrics_previous_and_next() -> tuple[str, str, str]:
+async def get_timed_lyrics_previous_and_next() -> tuple[str, str, str]:
     """
     This function returns the previous, current and next lyrics of the song.
 
@@ -105,7 +113,7 @@ def get_timed_lyrics_previous_and_next() -> tuple[str, str, str]:
 
         return current_song_lyrics[lyric_index][1] or "-"
 
-    _update_song()
+    await _update_song()
     lyric_index = _find_current_lyric_index()
     if lyric_index == -1: return "Lyrics not found"
     previous = _lyric_representation(lyric_index-1) if lyric_index > 0 else "-"

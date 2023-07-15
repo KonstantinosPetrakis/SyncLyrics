@@ -104,7 +104,7 @@ def settings() -> str:
 
 
 @app.route("/lyrics")
-def lyrics() -> list[str] | dict[str, str]:
+async def lyrics() -> list[str] | dict[str, str]:
     """
     This function returns the previous, current and next lyrics of the playing song as a list.
     If the lyrics are not found, it returns a dictionary with a message.
@@ -114,9 +114,9 @@ def lyrics() -> list[str] | dict[str, str]:
         If the lyrics are not found, it returns a dictionary with a message.
     """
 
-    lyrics = get_timed_lyrics_previous_and_next()
+    lyrics = await get_timed_lyrics_previous_and_next()
     if type(lyrics) == str: return {"msg": lyrics} # lyrics not found
-    return list(get_timed_lyrics_previous_and_next())
+    return list(lyrics)
 
 
 @app.route("/reset-defaults")
@@ -131,16 +131,3 @@ def reset_defaults() -> Response:
     reset_state()
     flash("Settings have been reset!", "success")
     return redirect("/settings")
-
-
-@app.route("/exit-application")
-def exit_application() -> dict[str, str]:
-    """
-    This function exits the application.
-
-    Returns:
-        dict[str, str]: A dictionary with a success message.
-    """
-
-    kill(getpid(), SIGINT)
-    return {"msg": "Application has been closed."}
