@@ -5,6 +5,8 @@ A cross-platform application that let's you sing along to your favorite songs re
 
 For more information check the SyncLyrics' [website](https://konstantinospetrakis.github.io/SyncLyrics/)!
 
+**For linux playerctl is required**
+
 ## Run from source
 ```python
 python -m venv venv
